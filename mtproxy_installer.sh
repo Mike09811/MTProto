@@ -26,6 +26,8 @@ PROXY_CONFIG_URL="https://core.telegram.org/getProxyConfig"
 DEFAULT_PORT=443
 PROXY_PORT="${DEFAULT_PORT}"
 SECRET=""
+SECRET_RAW=""
+FAKE_TLS_DOMAIN="cloudflare.com"
 PROXY_TAG=""
 SERVER_IP=""
 OS_TYPE=""
@@ -169,17 +171,33 @@ install_binary() {
 }
 
 generate_secret() {
-    log_info "正在生成客户端连接密钥..."
+    log_info "正在生成客户端连接密钥（fake-tls 模式）..."
 
-    SECRET=$(head -c 16 /dev/urandom | xxd -ps)
+    # 生成 16 字节随机密钥
+    local raw_secret
+    raw_secret=$(head -c 16 /dev/urandom | xxd -ps)
 
-    if [[ -z "$SECRET" ]]; then
-        # xxd 可能不可用，使用 od 作为备选
-        SECRET=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+    if [[ -z "$raw_secret" ]]; then
+        raw_secret=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
     fi
 
-    echo "$SECRET" > "$INSTALL_DIR/secret"
-    log_info "Secret 已生成并保存到 $INSTALL_DIR/secret"
+    # fake-tls 伪装域名（用于绕过 DPI 检测）
+    local fake_tls_domain="cloudflare.com"
+    local domain_hex
+    domain_hex=$(echo -n "$fake_tls_domain" | xxd -ps)
+
+    if [[ -z "$domain_hex" ]]; then
+        domain_hex=$(echo -n "$fake_tls_domain" | od -An -tx1 | tr -d ' \n')
+    fi
+
+    # 完整 Secret = dd + 随机密钥 + 域名十六进制
+    SECRET="dd${raw_secret}${domain_hex}"
+
+    # 保存原始密钥（MTProxy 启动参数使用原始密钥）
+    SECRET_RAW="$raw_secret"
+    echo "$raw_secret" > "$INSTALL_DIR/secret"
+
+    log_info "Secret 已生成（fake-tls 模式，伪装域名: $fake_tls_domain）"
 }
 
 download_config() {
@@ -246,7 +264,7 @@ configure_port() {
 setup_systemd_service() {
     log_info "正在创建 systemd 服务..."
 
-    local exec_start="$BINARY_PATH -u nobody -p 8888 -H $PROXY_PORT -S $SECRET --aes-pwd $INSTALL_DIR/proxy-secret $INSTALL_DIR/proxy-multi.conf -M 1"
+    local exec_start="$BINARY_PATH -u nobody -p 8888 -H $PROXY_PORT -S $SECRET_RAW --aes-pwd $INSTALL_DIR/proxy-secret $INSTALL_DIR/proxy-multi.conf -M 1 --nat-info $SERVER_IP:$SERVER_IP -D $FAKE_TLS_DOMAIN"
 
     if [[ -n "$PROXY_TAG" ]]; then
         exec_start="$exec_start -P $PROXY_TAG"
@@ -286,7 +304,7 @@ start_service() {
         log_info "排查建议:"
         log_info "  1. 检查端口 $PROXY_PORT 是否被占用: ss -tlnp | grep $PROXY_PORT"
         log_info "  2. 检查配置文件是否完整: ls -la $INSTALL_DIR/"
-        log_info "  3. 手动启动测试: $BINARY_PATH -u nobody -p 8888 -H $PROXY_PORT -S $SECRET --aes-pwd $INSTALL_DIR/proxy-secret $INSTALL_DIR/proxy-multi.conf -M 1"
+        log_info "  3. 手动启动测试: $BINARY_PATH -u nobody -p 8888 -H $PROXY_PORT -S $SECRET_RAW --aes-pwd $INSTALL_DIR/proxy-secret $INSTALL_DIR/proxy-multi.conf -M 1"
         exit 1
     fi
 }
@@ -332,13 +350,19 @@ UPDATEEOF
     log_info "自动更新任务已配置（每天凌晨 3:00 执行）"
 }
 
-show_result() {
+get_server_ip() {
+    log_info "正在获取服务器公网 IP..."
     SERVER_IP=$(curl -sf https://api.ipify.org || curl -sf https://ifconfig.me || curl -sf https://icanhazip.com)
 
     if [[ -z "$SERVER_IP" ]]; then
         SERVER_IP="<无法获取，请手动填写服务器IP>"
+        log_warn "无法自动获取公网 IP，请在连接链接中手动替换"
+    else
+        log_info "服务器公网 IP: $SERVER_IP"
     fi
+}
 
+show_result() {
     echo ""
     echo "============================================================"
     echo "  MTProxy 安装完成"
@@ -347,6 +371,7 @@ show_result() {
     echo "  服务器 IP:    $SERVER_IP"
     echo "  监听端口:     $PROXY_PORT"
     echo "  Secret:       $SECRET"
+    echo "  模式:         fake-tls (伪装域名: $FAKE_TLS_DOMAIN)"
     echo ""
 
     if [[ -n "$PROXY_TAG" ]]; then
@@ -387,6 +412,7 @@ do_install() {
     download_config
     configure_promotion
     configure_port
+    get_server_ip
     setup_systemd_service
     start_service
     setup_cron_update
