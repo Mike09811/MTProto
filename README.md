@@ -87,10 +87,11 @@ sudo bash mtproxy_installer.sh
 
 1. 打开 Telegram，搜索 **@MTProxybot**
 2. 发送 `/newproxy`
-3. 按提示输入你的服务器 IP 和端口
-4. 选择要推广的频道/群组
-5. 获得 Proxy Tag（一串十六进制字符）
-6. 在安装脚本提示时输入该 Tag
+3. 机器人会提示 `Please send me its address in the format host:port`
+4. 回复你的 **服务器IP:端口**，例如 `203.0.113.1:443`
+5. 机器人会让你选择要推广的频道/群组
+6. 完成后机器人返回一串十六进制字符，即 **Proxy Tag**
+7. 在安装脚本提示时输入该 Tag
 
 > 如果暂时不需要绑定营销群，安装时直接按回车跳过即可。
 

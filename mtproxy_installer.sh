@@ -201,10 +201,20 @@ download_config() {
 }
 
 configure_promotion() {
+    # 先获取服务器 IP 供提示使用
+    local tip_ip
+    tip_ip=$(curl -sf https://api.ipify.org || curl -sf https://ifconfig.me || echo "<你的服务器IP>")
+
     echo ""
     log_info "========== 营销群绑定配置 =========="
-    log_info "如需绑定营销频道，请先在 Telegram 中联系 @MTProxybot 获取 Proxy Tag"
-    log_info "步骤: 打开 Telegram → 搜索 @MTProxybot → 发送 /newproxy → 按提示操作获取 Tag"
+    log_info "绑定营销频道后，通过代理连接的用户会在聊天列表顶部看到你推广的频道"
+    echo ""
+    log_info "获取 Proxy Tag 步骤："
+    log_info "  1. 打开 Telegram，搜索 @MTProxybot 并发送 /newproxy"
+    log_info "  2. 机器人会提示 'Please send me its address in the format host:port'"
+    log_info "     → 回复你的服务器地址，例如: ${tip_ip}:${PROXY_PORT:-443}"
+    log_info "  3. 机器人会提示你选择要推广的频道/群组"
+    log_info "  4. 完成后机器人会返回一串十六进制字符，那就是 Proxy Tag"
     echo ""
     read -rp "请输入 Proxy Tag（直接回车跳过）: " input_tag
 
