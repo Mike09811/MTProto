@@ -389,26 +389,26 @@ show_result() {
     echo "  连接 Secret（给客户端用，含 dd 前缀）:"
     echo "    $SECRET"
     echo ""
-
-    if [[ -n "$PROXY_TAG" ]]; then
-        echo "  营销群绑定:   ✅ 已启用"
-        echo "  Proxy Tag:    $PROXY_TAG"
-    else
-        echo "  营销群绑定:   ❌ 未配置"
-    fi
-
-    echo ""
     echo "  ---- 连接链接（分享给用户） ----"
     echo ""
     echo "  tg://proxy?server=${SERVER_IP}&port=${PROXY_PORT}&secret=${SECRET}"
     echo ""
     echo "  https://t.me/proxy?server=${SERVER_IP}&port=${PROXY_PORT}&secret=${SECRET}"
     echo ""
+    echo "  ---- 绑定营销群 ----"
+    echo ""
+    echo "  去 Telegram 找 @MTProxybot 发送 /newproxy"
+    echo "  输入地址: ${SERVER_IP}:${PROXY_PORT}"
+    echo "  输入密钥: ${SECRET_RAW}"
+    echo "  拿到 Proxy Tag 后执行:"
+    echo "    bash $0 bindtag <你的PROXY_TAG>"
+    echo ""
     echo "============================================================"
     echo "  管理命令:"
     echo "    启动: systemctl start $SERVICE_NAME"
     echo "    停止: systemctl stop $SERVICE_NAME"
     echo "    状态: systemctl status $SERVICE_NAME"
+    echo "    绑定营销群: bash $0 bindtag <PROXY_TAG>"
     echo "    卸载: bash $0 uninstall"
     echo "============================================================"
     echo ""
@@ -432,11 +432,6 @@ do_install() {
     start_service
     setup_cron_update
     show_result
-    configure_promotion
-    # 如果配置了营销群，重新展示最终信息
-    if [[ -n "$PROXY_TAG" ]]; then
-        show_result
-    fi
 }
 
 # ============================================================
@@ -504,12 +499,53 @@ do_uninstall() {
 }
 
 # ============================================================
+# 绑定营销群
+# ============================================================
+
+do_bindtag() {
+    check_root
+
+    local tag="$1"
+    if [[ -z "$tag" ]]; then
+        log_error "请提供 Proxy Tag"
+        log_error "用法: bash $0 bindtag <PROXY_TAG>"
+        exit 1
+    fi
+
+    echo "$tag" > "$INSTALL_DIR/proxy_tag"
+
+    # 读取当前 ExecStart 并追加 -P 参数
+    local current_exec
+    current_exec=$(grep "^ExecStart=" "$SERVICE_FILE" | sed 's/ExecStart=//')
+
+    # 移除旧的 -P 参数（如果有）
+    current_exec=$(echo "$current_exec" | sed 's/ -P [^ ]*//')
+
+    # 添加新的 -P 参数
+    current_exec="$current_exec -P $tag"
+
+    sed -i "s|^ExecStart=.*|ExecStart=$current_exec|" "$SERVICE_FILE"
+
+    systemctl daemon-reload
+    systemctl restart "$SERVICE_NAME"
+
+    if systemctl is-active --quiet "$SERVICE_NAME"; then
+        log_info "营销群绑定成功，Proxy Tag: $tag"
+        log_info "MTProxy 服务已重启"
+    else
+        log_error "服务重启失败，请检查 Proxy Tag 是否正确"
+        journalctl -u "$SERVICE_NAME" --no-pager -n 10 >&2
+    fi
+}
+
+# ============================================================
 # 入口函数
 # ============================================================
 
 main() {
     case "$1" in
         uninstall) do_uninstall ;;
+        bindtag)   do_bindtag "$2" ;;
         *)         do_install ;;
     esac
 }
