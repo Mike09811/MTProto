@@ -219,32 +219,38 @@ download_config() {
 }
 
 configure_promotion() {
-    # 先获取服务器 IP 供提示使用
-    local tip_ip
-    tip_ip=$(curl -sf https://api.ipify.org || curl -sf https://ifconfig.me || echo "<你的服务器IP>")
-
     echo ""
     log_info "========== 营销群绑定配置 =========="
     log_info "绑定营销频道后，通过代理连接的用户会在聊天列表顶部看到你推广的频道"
     echo ""
     log_info "获取 Proxy Tag 步骤："
     log_info "  1. 打开 Telegram，搜索 @MTProxybot 并发送 /newproxy"
-    log_info "  2. 机器人会提示 'Please send me its address in the format host:port'"
-    log_info "     → 回复你的服务器地址，例如: ${tip_ip}:${PROXY_PORT:-443}"
-    log_info "  3. 机器人会提示你选择要推广的频道/群组"
-    log_info "  4. 完成后机器人会返回一串十六进制字符，那就是 Proxy Tag"
-    log_info ""
-    log_info "  注意: @MTProxybot 要求输入的 Secret 是原始 32 位密钥（不含 dd 前缀）"
-    log_info "  你的原始 Secret: $SECRET_RAW"
+    log_info "  2. 机器人提示输入地址 → 回复: ${SERVER_IP}:${PROXY_PORT}"
+    log_info "  3. 机器人提示输入 Secret → 回复: ${SECRET_RAW}"
+    log_info "  4. 选择要推广的频道/群组"
+    log_info "  5. 机器人返回的十六进制字符串就是 Proxy Tag"
+    echo ""
+    log_info "现在可以去 Telegram 操作，拿到 Tag 后回来输入"
     echo ""
     read -rp "请输入 Proxy Tag（直接回车跳过）: " input_tag
 
     if [[ -n "$input_tag" ]]; then
         PROXY_TAG="$input_tag"
         echo "$PROXY_TAG" > "$INSTALL_DIR/proxy_tag"
-        log_info "Proxy Tag 已保存，营销群绑定已启用"
+        log_info "Proxy Tag 已保存，正在更新服务配置..."
+
+        # 重新生成 systemd 服务文件，加上 -P 参数
+        setup_systemd_service
+        systemctl restart "$SERVICE_NAME"
+
+        if systemctl is-active --quiet "$SERVICE_NAME"; then
+            log_info "营销群绑定已启用，服务已重启"
+        else
+            log_error "服务重启失败，请检查 Proxy Tag 是否正确"
+            journalctl -u "$SERVICE_NAME" --no-pager -n 10 >&2
+        fi
     else
-        log_info "跳过营销群绑定配置"
+        log_info "跳过营销群绑定（后续可手动配置）"
     fi
 }
 
@@ -420,13 +426,17 @@ do_install() {
     install_binary
     generate_secret
     download_config
-    configure_promotion
     configure_port
     get_server_ip
     setup_systemd_service
     start_service
     setup_cron_update
     show_result
+    configure_promotion
+    # 如果配置了营销群，重新展示最终信息
+    if [[ -n "$PROXY_TAG" ]]; then
+        show_result
+    fi
 }
 
 # ============================================================
