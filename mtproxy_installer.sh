@@ -233,6 +233,9 @@ configure_promotion() {
     log_info "     → 回复你的服务器地址，例如: ${tip_ip}:${PROXY_PORT:-443}"
     log_info "  3. 机器人会提示你选择要推广的频道/群组"
     log_info "  4. 完成后机器人会返回一串十六进制字符，那就是 Proxy Tag"
+    log_info ""
+    log_info "  注意: @MTProxybot 要求输入的 Secret 是原始 32 位密钥（不含 dd 前缀）"
+    log_info "  你的原始 Secret: $SECRET_RAW"
     echo ""
     read -rp "请输入 Proxy Tag（直接回车跳过）: " input_tag
 
@@ -370,8 +373,15 @@ show_result() {
     echo ""
     echo "  服务器 IP:    $SERVER_IP"
     echo "  监听端口:     $PROXY_PORT"
-    echo "  Secret:       $SECRET"
     echo "  模式:         fake-tls (伪装域名: $FAKE_TLS_DOMAIN)"
+    echo ""
+    echo "  ---- 密钥信息 ----"
+    echo ""
+    echo "  原始 Secret（给 @MTProxybot 用）:"
+    echo "    $SECRET_RAW"
+    echo ""
+    echo "  连接 Secret（给客户端用，含 dd 前缀）:"
+    echo "    $SECRET"
     echo ""
 
     if [[ -n "$PROXY_TAG" ]]; then
@@ -382,7 +392,7 @@ show_result() {
     fi
 
     echo ""
-    echo "  ---- 连接链接 ----"
+    echo "  ---- 连接链接（分享给用户） ----"
     echo ""
     echo "  tg://proxy?server=${SERVER_IP}&port=${PROXY_PORT}&secret=${SECRET}"
     echo ""
