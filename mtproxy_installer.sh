@@ -218,56 +218,9 @@ download_config() {
     log_info "proxy-multi.conf 下载完成"
 }
 
-configure_promotion() {
-    echo ""
-    log_info "========== 营销群绑定配置 =========="
-    log_info "绑定营销频道后，通过代理连接的用户会在聊天列表顶部看到你推广的频道"
-    echo ""
-    log_info "获取 Proxy Tag 步骤："
-    log_info "  1. 打开 Telegram，搜索 @MTProxybot 并发送 /newproxy"
-    log_info "  2. 机器人提示输入地址 → 回复: ${SERVER_IP}:${PROXY_PORT}"
-    log_info "  3. 机器人提示输入 Secret → 回复: ${SECRET_RAW}"
-    log_info "  4. 选择要推广的频道/群组"
-    log_info "  5. 机器人返回的十六进制字符串就是 Proxy Tag"
-    echo ""
-    log_info "现在可以去 Telegram 操作，拿到 Tag 后回来输入"
-    echo ""
-    read -rp "请输入 Proxy Tag（直接回车跳过）: " input_tag
-
-    if [[ -n "$input_tag" ]]; then
-        PROXY_TAG="$input_tag"
-        echo "$PROXY_TAG" > "$INSTALL_DIR/proxy_tag"
-        log_info "Proxy Tag 已保存，正在更新服务配置..."
-
-        # 重新生成 systemd 服务文件，加上 -P 参数
-        setup_systemd_service
-        systemctl restart "$SERVICE_NAME"
-
-        if systemctl is-active --quiet "$SERVICE_NAME"; then
-            log_info "营销群绑定已启用，服务已重启"
-        else
-            log_error "服务重启失败，请检查 Proxy Tag 是否正确"
-            journalctl -u "$SERVICE_NAME" --no-pager -n 10 >&2
-        fi
-    else
-        log_info "跳过营销群绑定（后续可手动配置）"
-    fi
-}
-
 configure_port() {
-    echo ""
-    read -rp "请输入监听端口号（默认 ${DEFAULT_PORT}）: " input_port
-
-    if [[ -z "$input_port" ]]; then
-        PROXY_PORT="${DEFAULT_PORT}"
-    elif [[ "$input_port" =~ ^[0-9]+$ ]] && [[ "$input_port" -ge 1 ]] && [[ "$input_port" -le 65535 ]]; then
-        PROXY_PORT="$input_port"
-    else
-        log_warn "无效的端口号: $input_port，使用默认端口 ${DEFAULT_PORT}"
-        PROXY_PORT="${DEFAULT_PORT}"
-    fi
-
-    log_info "监听端口设置为: $PROXY_PORT"
+    PROXY_PORT="${DEFAULT_PORT}"
+    log_info "监听端口: $PROXY_PORT"
 }
 
 setup_systemd_service() {
