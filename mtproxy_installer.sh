@@ -1,8 +1,9 @@
 #!/bin/bash
 #
-# MTProxy 一键安装脚本
+# MTProxy 一键安装脚本 v2.0
 # 用于在 Linux 服务器上快速部署 Telegram MTProto Proxy 代理服务
 # 支持 Debian/Ubuntu、CentOS/RHEL、Alpine Linux
+# 全自动安装，无交互提示
 #
 # 用法:
 #   安装: bash mtproxy_installer.sh
