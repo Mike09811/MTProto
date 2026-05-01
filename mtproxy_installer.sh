@@ -91,16 +91,17 @@ download_mtg() {
 # 生成 Secret
 # ============================================================
 generate_secret() {
+    # mtg v2 使用 --hex 生成 hex 格式 secret（兼容 @MTProxybot）
     local secret
-    secret=$("$BINARY_FILE" generate-secret "$DEFAULT_DOMAIN" 2>/dev/null)
+    secret=$("$BINARY_FILE" generate-secret --hex "$DEFAULT_DOMAIN" 2>/dev/null)
 
     if [[ -z "$secret" ]]; then
-        # 手动生成 dd + random + domain_hex
+        # 手动生成 ee + 32hex_random + domain_hex（FakeTLS 格式）
         local raw
         raw=$(head -c 16 /dev/urandom | xxd -ps 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
         local domain_hex
         domain_hex=$(echo -n "$DEFAULT_DOMAIN" | xxd -ps 2>/dev/null || echo -n "$DEFAULT_DOMAIN" | od -An -tx1 | tr -d ' \n')
-        secret="dd${raw}${domain_hex}"
+        secret="ee${raw}${domain_hex}"
     fi
 
     echo "$secret"
@@ -146,9 +147,9 @@ do_install() {
 
     log_info "Secret: $secret"
 
-    # 提取原始 Secret（去掉 dd 前缀和域名部分）
+    # 提取原始 Secret（去掉 ee 前缀，取前 32 位 hex，给 @MTProxybot 用）
     local raw_secret
-    raw_secret=$(echo "$secret" | sed 's/^dd//' | cut -c1-32)
+    raw_secret=$(echo "$secret" | sed 's/^ee//' | cut -c1-32)
 
     # 写入 mtg 配置文件
     cat > "$CONFIG_FILE" <<EOF
