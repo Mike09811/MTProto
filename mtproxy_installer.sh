@@ -59,22 +59,30 @@ download_mtg() {
     local filename=""
 
     case "$arch" in
-        x86_64|amd64)  filename="mtg-linux-amd64" ;;
-        aarch64|arm64) filename="mtg-linux-arm64" ;;
-        armv7l)        filename="mtg-linux-arm" ;;
+        x86_64|amd64)  filename="linux-amd64" ;;
+        aarch64|arm64) filename="linux-arm64" ;;
         *)
             log_error "不支持的架构: $arch"
             exit 1
             ;;
     esac
 
-    local url="https://github.com/9seconds/mtg/releases/download/v${MTG_VERSION}/${filename}"
+    local archive="mtg-${MTG_VERSION}-${filename}.tar.gz"
+    local url="https://github.com/9seconds/mtg/releases/download/v${MTG_VERSION}/${archive}"
+    local tmp_archive="${WORK_DIR}/${archive}"
 
-    if ! curl -sfL "$url" -o "$BINARY_FILE"; then
+    if ! curl -sfL "$url" -o "$tmp_archive"; then
         log_error "下载失败: $url"
         exit 1
     fi
 
+    if ! tar -xzf "$tmp_archive" -C "$WORK_DIR" --strip-components=1; then
+        log_error "解压失败: $tmp_archive"
+        rm -f "$tmp_archive"
+        exit 1
+    fi
+
+    rm -f "$tmp_archive"
     chmod +x "$BINARY_FILE"
     log_info "mtg 下载完成"
 }
