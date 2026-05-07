@@ -20,6 +20,7 @@ CONFIG_FILE="${WORK_DIR}/config.toml"
 INFO_FILE="${WORK_DIR}/info"
 SERVICE_NAME="telemt"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+SOURCE_DIR="${WORK_DIR}/telemt-src"
 
 TELEMT_VERSION="3.4.10"
 DEFAULT_PORT=443
@@ -49,47 +50,60 @@ get_server_ip() {
 }
 
 # ============================================================
-# 下载 telemt 二进制
+# 安装 Rust (如果未安装)
 # ============================================================
-download_telemt() {
-    log_info "下载 telemt v${TELEMT_VERSION}..."
+install_rust() {
+    if command -v cargo &>/dev/null; then
+        log_info "Rust 已安装"
+        return 0
+    fi
 
-    local arch
-    arch=$(uname -m)
-    local filename=""
+    log_info "安装 Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
 
-    case "$arch" in
-        x86_64|amd64)  filename="telemt-x86_64-linux-gnu.tar.gz" ;;
-        aarch64|arm64) filename="telemt-aarch64-linux-gnu.tar.gz" ;;
-        *)
-            log_error "不支持的架构: $arch"
-            exit 1
-            ;;
-    esac
+    if [[ -f "$HOME/.cargo/bin/cargo" ]]; then
+        export PATH="$HOME/.cargo/bin:$PATH"
+    fi
+}
 
-    local url="https://github.com/telemt/telemt/releases/download/${TELEMT_VERSION}/${filename}"
-    local tmp_archive="${WORK_DIR}/${filename}"
+# ============================================================
+# 编译 telemt 源码
+# ============================================================
+build_telemt() {
+    log_info "编译 telemt v${TELEMT_VERSION}..."
 
-    if ! curl -sfL "$url" -o "$tmp_archive"; then
-        log_error "下载失败: $url"
+    if [[ ! -d "$SOURCE_DIR" ]]; then
+        log_error "源码目录不存在: $SOURCE_DIR"
         exit 1
     fi
 
-    if ! tar -xzf "$tmp_archive" -C "$WORK_DIR"; then
-        log_error "解压失败: $tmp_archive"
-        rm -f "$tmp_archive"
+    cd "$SOURCE_DIR"
+
+    if ! command -v cargo &>/dev/null; then
+        export PATH="$HOME/.cargo/bin:$PATH"
+    fi
+
+    log_info "开始编译（首次可能需要几分钟）..."
+    if ! cargo build --release 2>&1 | tail -20; then
+        log_error "编译失败"
         exit 1
     fi
 
-    rm -f "$tmp_archive"
+    local built_binary="$SOURCE_DIR/target/release/telemt"
+    if [[ ! -f "$built_binary" ]]; then
+        built_binary="$SOURCE_DIR/target/release/telemt.exe"
+    fi
 
-    if [[ ! -f "$BINARY_FILE" ]]; then
-        log_error "二进制文件未找到，解压内容: $(ls -la "$WORK_DIR")"
+    if [[ ! -f "$built_binary" ]]; then
+        log_error "编译产物未找到"
         exit 1
     fi
 
+    cp "$built_binary" "$BINARY_FILE"
     chmod +x "$BINARY_FILE"
-    log_info "telemt 下载完成"
+
+    log_info "telemt 编译完成"
 }
 
 # ============================================================
@@ -114,7 +128,6 @@ do_install() {
 
     log_info "开始安装 MTProxy (telemt/Rust)..."
 
-    # 安装依赖
     if command -v apt-get &>/dev/null; then
         apt-get update -y >/dev/null 2>&1
         apt-get install -y curl xxd >/dev/null 2>&1
@@ -124,10 +137,19 @@ do_install() {
 
     mkdir -p "$WORK_DIR"
 
-    # 下载 telemt
-    download_telemt
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    # 获取 IP
+    if [[ -d "${script_dir}/telemt" ]]; then
+        log_info "复制 telemt 源码..."
+        cp -r "${script_dir}/telemt" "$SOURCE_DIR"
+    else
+        log_error "未找到 telemt 源码目录: ${script_dir}/telemt"
+        exit 1
+    fi
+
+    install_rust
+    build_telemt
+
     local server_ip
     server_ip=$(get_server_ip)
     if [[ -z "$server_ip" ]]; then
@@ -135,20 +157,16 @@ do_install() {
         exit 1
     fi
 
-    # 生成 Secret (32 位 hex，给 @MTProxybot 注册用)
     local raw_secret
     raw_secret=$(generate_secret)
 
-    # 计算域名 hex
     local domain_hex
     domain_hex=$(echo -n "$DEFAULT_DOMAIN" | xxd -ps 2>/dev/null || echo -n "$DEFAULT_DOMAIN" | od -An -tx1 | tr -d ' \n')
 
-    # 完整连接 Secret: ee + 32hex + domain_hex
     local secret="ee${raw_secret}${domain_hex}"
 
     log_info "Secret: $raw_secret"
 
-    # 写入 telemt 配置文件
     cat > "$CONFIG_FILE" <<EOF
 # Telemt 配置 — MTProto Proxy (Rust)
 # https://github.com/telemt/telemt
@@ -187,7 +205,6 @@ tls_emulation = true
 default = "${raw_secret}"
 EOF
 
-    # 保存信息
     cat > "$INFO_FILE" <<EOF
 SERVER_IP=${server_ip}
 PORT=${DEFAULT_PORT}
@@ -197,7 +214,6 @@ DOMAIN=${DEFAULT_DOMAIN}
 TAG=
 EOF
 
-    # 创建 systemd 服务
     cat > "$SERVICE_FILE" <<EOF
 [Unit]
 Description=Telemt - MTProto Proxy for Telegram (Rust)
@@ -302,14 +318,12 @@ do_bindtag() {
 
     source "$INFO_FILE"
 
-    # 在 [general] 段添加/更新 ad_tag
     if grep -q "^ad_tag" "$CONFIG_FILE"; then
         sed -i "s/^ad_tag = .*/ad_tag = \"${tag}\"/" "$CONFIG_FILE"
     else
         sed -i "/^\[general\]/a ad_tag = \"${tag}\"" "$CONFIG_FILE"
     fi
 
-    # 更新 info
     sed -i "s/^TAG=.*/TAG=${tag}/" "$INFO_FILE"
 
     systemctl restart "$SERVICE_NAME"
