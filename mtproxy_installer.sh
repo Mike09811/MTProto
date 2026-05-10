@@ -24,7 +24,53 @@ SOURCE_DIR="${WORK_DIR}/telemt-src"
 
 TELEMT_VERSION="3.4.3"
 DEFAULT_PORT=443
-DEFAULT_DOMAIN="cloudflare.com"
+
+SNI_DOMAINS=(
+  "cloudflare.com"
+  "www.cloudflare.com"
+  "developers.google.com"
+  "cloud.google.com"
+  "support.google.com"
+  "login.microsoftonline.com"
+  "go.microsoft.com"
+  "learn.microsoft.com"
+  "developer.microsoft.com"
+  "cloud.microsoft.com"
+  "support.microsoft.com"
+  "developer.apple.com"
+  "support.apple.com"
+  "store.apple.com"
+  "music.apple.com"
+  "aws.amazon.com"
+  "developer.amazon.com"
+  "docs.aws.amazon.com"
+  "cloud.oracle.com"
+  "docs.oracle.com"
+  "support.oracle.com"
+  "developer.oracle.com"
+  "developer.ibm.com"
+  "cloud.ibm.com"
+  "research.ibm.com"
+  "developer.intel.com"
+  "software.intel.com"
+  "support.intel.com"
+  "developer.cisco.com"
+  "cloud.cisco.com"
+  "docs.cisco.com"
+  "developers.sap.com"
+  "help.sap.com"
+  "docs.gitlab.com"
+  "docs.github.com"
+  "api.github.com"
+  "developer.zoom.us"
+)
+
+select_random_domain() {
+  local index=$((RANDOM % ${#SNI_DOMAINS[@]}))
+  echo "${SNI_DOMAINS[$index]}"
+}
+
+DEFAULT_DOMAIN=$(select_random_domain)
 
 # ============================================================
 # 日志函数
