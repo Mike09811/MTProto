@@ -2,11 +2,11 @@
 
 一键部署 Telegram MTProxy TLS 代理服务，支持绑定营销频道/群组推广。
 
-基于 [telemt](https://github.com/telemt/telemt)（Rust 实现），预编译二进制，无需编译，支持 FakeTLS 域名伪装 + 营销群推广。
+基于 [telemt](https://github.com/telemt/telemt)（Rust 实现），源码编译，支持 FakeTLS 域名伪装 + 营销群推广。
 
 ## ✨ 功能特性
 
-- 🚀 **一键安装** — 预编译二进制，无需编译，秒装
+- 🚀 **一键安装** — 自动安装 Rust 并从源码编译
 - 🔒 **TLS 伪装** — FakeTLS 伪装为正常 HTTPS 流量（默认伪装 cloudflare.com）
 - 📢 **营销群绑定** — 支持 Proxy Tag，用户连接后展示推广频道（✅ Rust 版确认支持）
 - 🔗 **连接链接生成** — 安装完成自动生成 `tg://` 和 `https://t.me/proxy` 链接
