@@ -10,7 +10,7 @@ redteam_offline_expected_fail = []
 libc = "0.2"
 
 tokio = { version = "1.44", features = ["full", "tracing"] }
-tokio-util = { version = "0.8", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full"] }
 
 aes = "0.8"
 ctr = "0.9"
