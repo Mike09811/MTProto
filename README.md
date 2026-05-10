@@ -22,10 +22,19 @@
 
 ### 一键安装
 
+**方式一：分步骤执行（推荐）**
+
 ```bash
-mkdir -p /home/mtproxy && cd /home/mtproxy
+mkdir -p /home/mtproxy
+cd /home/mtproxy
 curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh -o mtproxy_installer.sh
 bash mtproxy_installer.sh
+```
+
+**方式二：单行执行**
+
+```bash
+mkdir -p /home/mtproxy && cd /home/mtproxy && curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh -o mtproxy_installer.sh && bash mtproxy_installer.sh
 ```
 
 ### 安装完成输出示例
