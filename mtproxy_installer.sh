@@ -22,7 +22,7 @@ SERVICE_NAME="telemt"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 SOURCE_DIR="${WORK_DIR}/telemt-src"
 
-TELEMT_VERSION="3.4.10"
+TELEMT_VERSION="3.4.3"
 DEFAULT_PORT=443
 DEFAULT_DOMAIN="cloudflare.com"
 
@@ -130,21 +130,24 @@ do_install() {
 
     if command -v apt-get &>/dev/null; then
         apt-get update -y >/dev/null 2>&1
-        apt-get install -y curl xxd >/dev/null 2>&1
+        apt-get install -y curl xxd git tar >/dev/null 2>&1
     elif command -v yum &>/dev/null; then
-        yum install -y curl vim-common >/dev/null 2>&1
+        yum install -y curl vim-common git tar >/dev/null 2>&1
     fi
 
     mkdir -p "$WORK_DIR"
 
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-    if [[ -d "${script_dir}/telemt" ]]; then
-        log_info "复制 telemt 源码..."
-        cp -r "${script_dir}/telemt" "$SOURCE_DIR"
+    if [[ -d "${SOURCE_DIR}" ]]; then
+        log_info "使用已存在的 telemt 源码目录: $SOURCE_DIR"
     else
-        log_error "未找到 telemt 源码目录: ${script_dir}/telemt"
-        exit 1
+        log_info "下载 telemt 源码..."
+        git clone --depth 1 --branch v${TELEMT_VERSION} https://github.com/telemt/telemt.git "$SOURCE_DIR" 2>/dev/null || {
+            log_error "克隆失败，尝试直接下载源码压缩包..."
+            curl -fsSL https://github.com/telemt/telemt/archive/refs/tags/v${TELEMT_VERSION}.tar.gz -o telemt.tar.gz
+            tar -xzf telemt.tar.gz
+            mv telemt-${TELEMT_VERSION} "$SOURCE_DIR"
+            rm -f telemt.tar.gz
+        }
     fi
 
     install_rust
