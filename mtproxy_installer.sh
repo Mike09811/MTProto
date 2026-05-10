@@ -26,8 +26,6 @@ TELEMT_VERSION="3.4.3"
 DEFAULT_PORT=443
 
 SNI_DOMAINS=(
-  "cloudflare.com"
-  "www.cloudflare.com"
   "developers.google.com"
   "cloud.google.com"
   "support.google.com"
