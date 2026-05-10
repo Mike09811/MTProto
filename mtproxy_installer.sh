@@ -130,9 +130,9 @@ do_install() {
 
     if command -v apt-get &>/dev/null; then
         apt-get update -y >/dev/null 2>&1
-        apt-get install -y curl xxd git tar >/dev/null 2>&1
+        apt-get install -y curl xxd git tar build-essential >/dev/null 2>&1
     elif command -v yum &>/dev/null; then
-        yum install -y curl vim-common git tar >/dev/null 2>&1
+        yum install -y curl vim-common git tar gcc make >/dev/null 2>&1
     fi
 
     mkdir -p "$WORK_DIR"
@@ -141,11 +141,11 @@ do_install() {
         log_info "使用已存在的 telemt 源码目录: $SOURCE_DIR"
     else
         log_info "下载 telemt 源码..."
-        git clone --depth 1 --branch v${TELEMT_VERSION} https://github.com/telemt/telemt.git "$SOURCE_DIR" 2>/dev/null || {
+        git clone --depth 1 https://github.com/telemt/telemt.git "$SOURCE_DIR" 2>/dev/null || {
             log_error "克隆失败，尝试直接下载源码压缩包..."
-            curl -fsSL https://github.com/telemt/telemt/archive/refs/tags/v${TELEMT_VERSION}.tar.gz -o telemt.tar.gz
+            curl -fsSL https://github.com/telemt/telemt/archive/refs/heads/main.tar.gz -o telemt.tar.gz
             tar -xzf telemt.tar.gz
-            mv telemt-${TELEMT_VERSION} "$SOURCE_DIR"
+            mv telemt-main "$SOURCE_DIR"
             rm -f telemt.tar.gz
         }
     fi
