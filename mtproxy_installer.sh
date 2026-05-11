@@ -2,10 +2,10 @@
 #
 # MTProxy TLS 一键安装脚本
 # 基于 telemt (Rust) — 支持 FakeTLS + 营销群推广
-# https://github.com/telemt/telemt
+# https://github.com/Mike09811/MTProto
 #
 # 用法:
-#   安装: bash mtproxy_installer.sh
+#   安装: curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh | bash
 #   卸载: bash mtproxy_installer.sh uninstall
 #   绑定营销群: bash mtproxy_installer.sh bindtag <PROXY_TAG>
 #   查看信息: bash mtproxy_installer.sh info
@@ -20,9 +20,8 @@ CONFIG_FILE="${WORK_DIR}/config.toml"
 INFO_FILE="${WORK_DIR}/info"
 SERVICE_NAME="telemt"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-SOURCE_DIR="${WORK_DIR}/telemt-src"
 
-TELEMT_VERSION="3.4.3"
+TELEMT_BINARY_URL="https://github.com/Mike09811/MTProto/raw/main/bin/telemt"
 DEFAULT_PORT=443
 
 SNI_DOMAINS=(
@@ -94,60 +93,18 @@ get_server_ip() {
 }
 
 # ============================================================
-# 安装 Rust (如果未安装)
+# 下载预编译二进制
 # ============================================================
-install_rust() {
-    if command -v cargo &>/dev/null; then
-        log_info "Rust 已安装"
-        return 0
-    fi
+download_telemt() {
+    log_info "下载 telemt 预编译二进制..."
 
-    log_info "安装 Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source "$HOME/.cargo/env"
-
-    if [[ -f "$HOME/.cargo/bin/cargo" ]]; then
-        export PATH="$HOME/.cargo/bin:$PATH"
-    fi
-}
-
-# ============================================================
-# 编译 telemt 源码
-# ============================================================
-build_telemt() {
-    log_info "编译 telemt v${TELEMT_VERSION}..."
-
-    if [[ ! -d "$SOURCE_DIR" ]]; then
-        log_error "源码目录不存在: $SOURCE_DIR"
+    if ! curl -fsSL --retry 3 --connect-timeout 10 "$TELEMT_BINARY_URL" -o "$BINARY_FILE"; then
+        log_error "下载 telemt 二进制失败，请检查网络"
         exit 1
     fi
 
-    cd "$SOURCE_DIR"
-
-    if ! command -v cargo &>/dev/null; then
-        export PATH="$HOME/.cargo/bin:$PATH"
-    fi
-
-    log_info "开始编译（首次可能需要几分钟）..."
-    if ! cargo build --release 2>&1 | tail -20; then
-        log_error "编译失败"
-        exit 1
-    fi
-
-    local built_binary="$SOURCE_DIR/target/release/telemt"
-    if [[ ! -f "$built_binary" ]]; then
-        built_binary="$SOURCE_DIR/target/release/telemt.exe"
-    fi
-
-    if [[ ! -f "$built_binary" ]]; then
-        log_error "编译产物未找到"
-        exit 1
-    fi
-
-    cp "$built_binary" "$BINARY_FILE"
     chmod +x "$BINARY_FILE"
-
-    log_info "telemt 编译完成"
+    log_info "telemt 下载完成"
 }
 
 # ============================================================
@@ -174,28 +131,14 @@ do_install() {
 
     if command -v apt-get &>/dev/null; then
         apt-get update -y >/dev/null 2>&1
-        apt-get install -y curl xxd git tar build-essential >/dev/null 2>&1
+        apt-get install -y curl xxd >/dev/null 2>&1
     elif command -v yum &>/dev/null; then
-        yum install -y curl vim-common git tar gcc make >/dev/null 2>&1
+        yum install -y curl vim-common >/dev/null 2>&1
     fi
 
     mkdir -p "$WORK_DIR"
 
-    if [[ -d "${SOURCE_DIR}" ]]; then
-        log_info "使用已存在的 telemt 源码目录: $SOURCE_DIR"
-    else
-        log_info "下载 telemt 源码..."
-        git clone --depth 1 https://github.com/telemt/telemt.git "$SOURCE_DIR" 2>/dev/null || {
-            log_error "克隆失败，尝试直接下载源码压缩包..."
-            curl -fsSL https://github.com/telemt/telemt/archive/refs/heads/main.tar.gz -o telemt.tar.gz
-            tar -xzf telemt.tar.gz
-            mv telemt-main "$SOURCE_DIR"
-            rm -f telemt.tar.gz
-        }
-    fi
-
-    install_rust
-    build_telemt
+    download_telemt
 
     local server_ip
     server_ip=$(get_server_ip)

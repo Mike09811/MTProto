@@ -2,39 +2,28 @@
 
 一键部署 Telegram MTProxy TLS 代理服务，支持绑定营销频道/群组推广。
 
-基于 [telemt](https://github.com/telemt/telemt)（Rust 实现），源码编译，支持 FakeTLS 域名伪装 + 营销群推广。
+基于 [telemt](https://github.com/telemt/telemt)（Rust 实现），使用预编译二进制，无需编译，支持 FakeTLS 域名伪装 + 营销群推广。
 
 ## ✨ 功能特性
 
-- 🚀 **一键安装** — 自动安装 Rust 并从源码编译
-- 🔒 **TLS 伪装** — FakeTLS 伪装为正常 HTTPS 流量（默认伪装 cloudflare.com）
-- 📢 **营销群绑定** — 支持 Proxy Tag，用户连接后展示推广频道（✅ Rust 版确认支持）
+- ⚡ **秒级安装** — 直接下载预编译二进制，无需编译等待
+- 🔒 **TLS 伪装** — FakeTLS 伪装为正常 HTTPS 流量
+- 📢 **营销群绑定** — 支持 Proxy Tag，用户连接后展示推广频道
 - 🔗 **连接链接生成** — 安装完成自动生成 `tg://` 和 `https://t.me/proxy` 链接
-- 🗑️ **绿色版** — 所有文件在一个目录，卸载干净
+- 🗑️ **绿色卸载** — 所有文件在一个目录，卸载干净
 
 ## 📋 系统要求
 
-- Linux 系统（Debian/Ubuntu、CentOS/RHEL、Alpine）
-- x86_64 或 ARM64 架构
+- Linux 系统（Debian/Ubuntu、CentOS/RHEL 等）
+- x86_64 架构
 - root 权限
 
 ## 🚀 快速开始
 
 ### 一键安装
 
-**方式一：分步骤执行（推荐）**
-
 ```bash
-mkdir -p /home/mtproxy
-cd /home/mtproxy
-curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh -o mtproxy_installer.sh
-bash mtproxy_installer.sh
-```
-
-**方式二：单行执行**
-
-```bash
-mkdir -p /home/mtproxy && cd /home/mtproxy && curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh -o mtproxy_installer.sh && bash mtproxy_installer.sh
+curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh | bash
 ```
 
 ### 安装完成输出示例

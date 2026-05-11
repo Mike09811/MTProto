@@ -1,0 +1,67 @@
+oot@ser108619026139:~# mkdir -p /home/mtproxy
+cd /home/mtproxy
+curl -fsSL https://raw.githubusercontent.com/Mike09811/MTProto/main/mtproxy_installer.sh -o mtproxy_installer.sh
+bash mtproxy_installer.sh
+[INFO] 开始安装 MTProxy (telemt/Rust)...
+[INFO] 下载 telemt 源码...
+[INFO] 安装 Rust...
+info: downloading installer
+warn: It looks like you have an existing rustup settings file at:
+warn: /root/.rustup/settings.toml
+warn: Rustup will install the default toolchain as specified in the settings file,
+warn: instead of the one inferred from the default host triple.
+info: profile set to default
+info: default host triple is x86_64-unknown-linux-gnu
+info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+info: latest update on 2026-04-16 for version 1.95.0 (59807616e 2026-04-14)
+info: downloading 6 components
+        cargo installed                       10.48 MiB
+       clippy installed                        4.48 MiB
+    rust-docs installed                       21.18 MiB
+     rust-std installed                       28.20 MiB
+        rustc installed                       76.63 MiB
+      rustfmt installed                        2.06 MiB                                                                         info: default toolchain set to stable-x86_64-unknown-linux-gnu
+
+  stable-x86_64-unknown-linux-gnu installed - rustc 1.95.0 (59807616e 2026-04-14)
+
+
+Rust is installed now. Great!
+
+To get started you may need to restart your current shell.
+This would reload your PATH environment variable to include
+Cargo's bin directory ($HOME/.cargo/bin).
+
+To configure your current shell, you need to source
+the corresponding env file under $HOME/.cargo.
+
+This is usually done by running one of the following (note the leading DOT):
+. "$HOME/.cargo/env"            # For sh/bash/zsh/ash/dash/pdksh
+source "$HOME/.cargo/env.fish"  # For fish
+source "~/.cargo/env.nu"  # For nushell
+source "$HOME/.cargo/env.tcsh"  # For tcsh
+. "$HOME/.cargo/env.ps1"        # For pwsh
+source "$HOME/.cargo/env.xsh"   # For xonsh
+[INFO] 编译 telemt v3.4.3...
+[INFO] 开始编译（首次可能需要几分钟）...
+   Compiling shadowsocks v1.24.0
+   Compiling chrono v0.4.44
+   Compiling reqwest v0.13.2
+   Compiling rand v0.10.1
+   Compiling x509-parser v0.18.1
+   Compiling x25519-dalek v2.0.1
+   Compiling lru v0.16.4
+   Compiling ipnetwork v0.21.1
+   Compiling regex v1.12.3
+   Compiling sha2 v0.10.9
+   Compiling webpki-roots v1.0.7
+   Compiling crossbeam-queue v0.3.12
+   Compiling cbc v0.1.2
+   Compiling hex v0.4.3
+   Compiling static_assertions v1.1.0
+   Compiling telemt v3.4.11 (/home/mtproxy/telemt-src)
+error: could not compile `telemt` (bin "telemt")
+
+Caused by:
+  process didn't exit successfully: `/root/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name telemt --edition=2024 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C opt-level=3 -C lto=fat -C codegen-units=1 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("redteam_offline_expected_fail"))' -C metadata=8cb9faa928c0bea9 -C extra-filename=-91f1853b48aa9cb6 --out-dir /home/mtproxy/telemt-src/target/release/deps -C strip=debuginfo -L dependency=/home/mtproxy/telemt-src/target/release/deps --extern aes=/home/mtproxy/telemt-src/target/release/deps/libaes-ecd5e63643103ca3.rlib --extern anyhow=/home/mtproxy/telemt-src/target/release/deps/libanyhow-1fbd62c204463a20.rlib --extern arc_swap=/home/mtproxy/telemt-src/target/release/deps/libarc_swap-e7fb614e48e34f8a.rlib --extern base64=/home/mtproxy/telemt-src/target/release/deps/libbase64-388461a8da0a2c1e.rlib --extern bytes=/home/mtproxy/telemt-src/target/release/deps/libbytes-af0cf8a9ee857648.rlib --extern cbc=/home/mtproxy/telemt-src/target/release/deps/libcbc-be300fbaa2d562c4.rlib --extern chrono=/home/mtproxy/telemt-src/target/release/deps/libchrono-2fdb67980558eff5.rlib --extern crc32c=/home/mtproxy/telemt-src/target/release/deps/libcrc32c-8ca046bdd308d185.rlib --extern crc32fast=/home/mtproxy/telemt-src/target/release/deps/libcrc32fast-f8361cb9002d969c.rlib --extern crossbeam_queue=/home/mtproxy/telemt-src/target/release/deps/libcrossbeam_queue-9bca4b32fd3d72fc.rlib --extern ctr=/home/mtproxy/telemt-src/target/release/deps/libctr-a3cc3d1bd893d0fd.rlib --extern dashmap=/home/mtproxy/telemt-src/target/release/deps/libdashmap-495bb5d2d44f1a4c.rlib --extern hex=/home/mtproxy/telemt-src/target/release/deps/libhex-06a0179103f1b766.rlib --extern hmac=/home/mtproxy/telemt-src/target/release/deps/libhmac-27f6adb24c538981.rlib --extern http_body_util=/home/mtproxy/telemt-src/target/release/deps/libhttp_body_util-c968bc43d7782b93.rlib --extern httpdate=/home/mtproxy/telemt-src/target/release/deps/libhttpdate-ad299435594823ac.rlib --extern hyper=/home/mtproxy/telemt-src/target/release/deps/libhyper-39f83943a3a4d634.rlib --extern hyper_util=/home/mtproxy/telemt-src/target/release/deps/libhyper_util-6526600bcd734a9c.rlib --extern ipnetwork=/home/mtproxy/telemt-src/target/release/deps/libipnetwork-c67a37b81bab9ea3.rlib --extern libc=/home/mtproxy/telemt-src/target/release/deps/liblibc-4c1ad737f71029cc.rlib --extern lru=/home/mtproxy/telemt-src/target/release/deps/liblru-7f861d44855bd18c.rlib --extern md5=/home/mtproxy/telemt-src/target/release/deps/libmd5-c70e793b9f0a2eee.rlib --extern nix=/home/mtproxy/telemt-src/target/release/deps/libnix-98aaa056b73e42bd.rlib --extern notify=/home/mtproxy/telemt-src/target/release/deps/libnotify-492bbbc11f564bbc.rlib --extern num_bigint=/home/mtproxy/telemt-src/target/release/deps/libnum_bigint-1fd19161e5a0d177.rlib --extern num_traits=/home/mtproxy/telemt-src/target/release/deps/libnum_traits-fbacdf7c3d2e0b42.rlib --extern parking_lot=/home/mtproxy/telemt-src/target/release/deps/libparking_lot-df76b1cd9d391d79.rlib --extern rand=/home/mtproxy/telemt-src/target/release/deps/librand-6398c86634905284.rlib --extern regex=/home/mtproxy/telemt-src/target/release/deps/libregex-a953c84ec2105438.rlib --extern reqwest=/home/mtproxy/telemt-src/target/release/deps/libreqwest-22b4103051d083ce.rlib --extern rustls=/home/mtproxy/telemt-src/target/release/deps/librustls-483952b5b7b4f5da.rlib --extern serde=/home/mtproxy/telemt-src/target/release/deps/libserde-8125a9b9bf60f02b.rlib --extern serde_json=/home/mtproxy/telemt-src/target/release/deps/libserde_json-b25acb82b1d1f212.rlib --extern sha1=/home/mtproxy/telemt-src/target/release/deps/libsha1-70269d378ef02d28.rlib --extern sha2=/home/mtproxy/telemt-src/target/release/deps/libsha2-d3771c5c45b7f3c2.rlib --extern shadowsocks=/home/mtproxy/telemt-src/target/release/deps/libshadowsocks-4c09a2686ac0c776.rlib --extern socket2=/home/mtproxy/telemt-src/target/release/deps/libsocket2-67ae859c19c0510a.rlib --extern static_assertions=/home/mtproxy/telemt-src/target/release/deps/libstatic_assertions-3a5b56b818962205.rlib --extern subtle=/home/mtproxy/telemt-src/target/release/deps/libsubtle-b006fc9d7754ef2b.rlib --extern thiserror=/home/mtproxy/telemt-src/target/release/deps/libthiserror-1e88abf900ce0d88.rlib --extern tokio=/home/mtproxy/telemt-src/target/release/deps/libtokio-cf16aecf036b7400.rlib --extern tokio_rustls=/home/mtproxy/telemt-src/target/release/deps/libtokio_rustls-983d0e97ad4a0a3f.rlib --extern tokio_util=/home/mtproxy/telemt-src/target/release/deps/libtokio_util-2df982fa8561dc1b.rlib --extern toml=/home/mtproxy/telemt-src/target/release/deps/libtoml-ed229550646d4371.rlib --extern tracing=/home/mtproxy/telemt-src/target/release/deps/libtracing-7c0bcc07eaf01b15.rlib --extern tracing_appender=/home/mtproxy/telemt-src/target/release/deps/libtracing_appender-771c5d0866f8e51e.rlib --extern tracing_subscriber=/home/mtproxy/telemt-src/target/release/deps/libtracing_subscriber-402d3d90aea2e4ba.rlib --extern url=/home/mtproxy/telemt-src/target/release/deps/liburl-d603e8a40b5db433.rlib --extern webpki_roots=/home/mtproxy/telemt-src/target/release/deps/libwebpki_roots-77c889c8800664ba.rlib --extern x25519_dalek=/home/mtproxy/telemt-src/target/release/deps/libx25519_dalek-21b263e0b31fbf00.rlib --extern x509_parser=/home/mtproxy/telemt-src/target/release/deps/libx509_parser-5716c994757aee52.rlib --extern zeroize=/home/mtproxy/telemt-src/target/release/deps/libzeroize-f1c4c67ea1c50ba5.rlib -L native=/home/mtproxy/telemt-src/target/release/build/aws-lc-sys-f2bb64e5fa5737df/out -L native=/home/mtproxy/telemt-src/target/release/build/ring-ca41bdf08c8e01af/out -L native=/home/mtproxy/telemt-src/target/release/build/blake3-09485feadab27001/out -L native=/home/mtproxy/telemt-src/target/release/build/blake3-09485feadab27001/out` (signal: 9, SIGKILL: kill)
+[ERROR] 编译产物未找到
+root@ser108619026139:/home/mtproxy#
